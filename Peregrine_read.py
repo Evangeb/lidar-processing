@@ -1,9 +1,11 @@
 import numpy as np
 import struct
 import sys
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib
 import matplotlib.pyplot as plt
 import cv2
-filename = '/home/gebhardt/Desktop/Peregrine_Test/test12018-09-29_13-06-47.ascar'
+filename = '/home/evan/Desktop/Peregrine_Test/test12018-09-29_13-06-47.ascar'
 
 # Type     Size (bytes)
 # uint8_t  1
@@ -11,7 +13,9 @@ filename = '/home/gebhardt/Desktop/Peregrine_Test/test12018-09-29_13-06-47.ascar
 # uint32_t 4
 # uint64_t 8
 
-
+def parse_range_bin(rv):
+    
+    return  int(rv[:14],2) + int(rv[14:], 2) / 2.**(len(rv[14:]))
 #test22018-09-29_13-09-14.ascar
 
 with open(filename, mode='rb') as file:
@@ -93,16 +97,17 @@ print(size_frame)
 # Segment Size 1 uint32_t RI size = 16384 = col * row * 4 = 128 * 32 * 4
 # Segment 1 uint8_t[Ri_size]
 
-'''
+
 frame_count = 0 
 
 
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('lidar-test.avi',fourcc, 20.0, (128,32))
-
+#fourcc = cv2.VideoWriter_fourcc(*'XVID')
+#out = cv2.VideoWriter('lidar-test.avi',fourcc, 20.0, (128,32))
+frame_range = np.zeros((32,128,num_frames))
 
 for zz in range(num_frames):
     frame_intensity = np.zeros((32,128))
+    
     vid_frame_intensity = np.zeros((32,128,3))
     pixel_count = 0
     for ii in range(num_rows):
@@ -116,24 +121,63 @@ for zz in range(num_frames):
 
             pixel_binary = pixel_byte1 + pixel_byte2 + pixel_byte3 + pixel_byte4
             intensity_value = int(pixel_binary[20:],2)
-            range_value = pixel_binary[:20]
+            range_value = parse_range_bin(pixel_binary[:20])
+            frame_range[ii,jj,zz] = range_value
             frame_intensity[ii,jj] = intensity_value
             vid_frame_intensity[ii,jj,:] = (intensity_value/4096)*255
             pixel_count += 1
     
-    out.write(vid_frame_intensity.astype(np.uint8))
+    #out.write(vid_frame_intensity.astype(np.uint8))
     
-    cv2.imwrite('frame{}.jpg'.format(frame_count), (frame_intensity/4096)*255)
+    #cv2.imwrite('frame{}.jpg'.format(frame_count), (frame_intensity/4096)*255)
     frame_count += 1
 
-out.release()
-'''
+#out.release()
+print(frame_range.shape)
 #plt.imshow(frame1_intensity)
 #plt.show()
 
+print(frame_range[:,:,0])
+
+tdlist = []
+current_frame = frame_range[0]
+for zz  in range(num_frames):
+    current_frame = frame_range[:,:,238]
+    tdlist = []
+    for ii in range(num_rows):
+        for jj in range(num_cols):
+            val = current_frame[ii,jj]
+            tdlist.append([ii, jj, val])
+
+    w, h = matplotlib.figure.figaspect(1/4.)
+
+    tdlist = np.asarray(tdlist)
+
+    fig = plt.figure(figsize = (w,h))
+    
+    
+
+    ax = fig.add_subplot(111, projection='3d')
+    
+
+    mapping = tdlist[:,2]
+    high_threshval = 50
+    low_threshval = 20
+    mapping[mapping > high_threshval] = high_threshval
+    mapping[mapping < low_threshval] = low_threshval
+    zmax = np.max(mapping)
+    zmin = np.min(mapping)
+    ax.set_zlim(zmin,zmax)
+    p = ax.scatter(tdlist[:,1], tdlist[:,0], mapping, c = mapping)
+
+    fig.colorbar(p)
+    
+    plt.show()
 
 
-pixel1 = fileContent[16816:16820]
+
+'''
+pixel1 = fileContent[396:400]
 
 #print(format(pixel1[0],'08b'))
 #print(format(pixel1[1],'08b'))
@@ -150,9 +194,20 @@ print(pixel1_binary)
 range_values = pixel1_binary[:20]
 print(int(pixel1_binary[20:],2))
 
-print(int(range_values[:14],2))
-print(int(range_values[14:],2))
+pixel1_range = parse_range_bin(range_values)
 
+print(pixel1_range)
+'''
+
+
+'''
+print(range_values[:14])
+print(parse_frac(range_values[14:]))
+
+fractional = range_values[14:]
+
+print(parse_frac(fractional))
+'''
 
 '''
 print(len(pixel1))
