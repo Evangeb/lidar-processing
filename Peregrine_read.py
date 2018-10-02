@@ -5,7 +5,9 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib
 import matplotlib.pyplot as plt
 import cv2
-filename = '/home/evan/Desktop/Peregrine_Test/test12018-09-29_13-06-47.ascar'
+
+
+filename = '/home/gebhardt/Desktop/Peregrine_Test/test12018-09-29_13-06-47.ascar'
 
 # Type     Size (bytes)
 # uint8_t  1
@@ -78,11 +80,11 @@ size_frame_header = 28
 
 size_frame_footer = 8
 
-print("The frame header is")
-print(frame_header_size)
+#print("The frame header is")
+#print(frame_header_size)
 
-print("The size of a frame is")
-print(size_frame)
+#print("The size of a frame is")
+#print(size_frame)
 
 
 #print(len(fileContent[368:388]))
@@ -133,46 +135,61 @@ for zz in range(num_frames):
     frame_count += 1
 
 #out.release()
-print(frame_range.shape)
+#print(frame_range.shape)
 #plt.imshow(frame1_intensity)
 #plt.show()
 
-print(frame_range[:,:,0])
+#print(frame_range[:,:,0])
 
 tdlist = []
-current_frame = frame_range[0]
-for zz  in range(num_frames):
-    current_frame = frame_range[:,:,238]
-    tdlist = []
-    for ii in range(num_rows):
-        for jj in range(num_cols):
-            val = current_frame[ii,jj]
-            tdlist.append([ii, jj, val])
+#current_frame = frame_range[0]
+#for zz  in range(num_frames):
+current_frame = frame_range[:,:,238]
+tdlist = []
+for ii in range(num_rows):
+    for jj in range(num_cols):
+        val = current_frame[ii,jj]
+        tdlist.append([ii, jj, val])
 
-    w, h = matplotlib.figure.figaspect(1/4.)
+w, h = matplotlib.figure.figaspect(1/4.)
 
-    tdlist = np.asarray(tdlist)
+tdlist = np.asarray(tdlist)
 
-    fig = plt.figure(figsize = (w,h))
-    
-    
+fig = plt.figure(figsize = (w,h))
 
-    ax = fig.add_subplot(111, projection='3d')
-    
 
-    mapping = tdlist[:,2]
-    high_threshval = 50
-    low_threshval = 20
-    mapping[mapping > high_threshval] = high_threshval
-    mapping[mapping < low_threshval] = low_threshval
-    zmax = np.max(mapping)
-    zmin = np.min(mapping)
-    ax.set_zlim(zmin,zmax)
-    p = ax.scatter(tdlist[:,1], tdlist[:,0], mapping, c = mapping)
 
-    fig.colorbar(p)
-    
-    plt.show()
+ax = fig.add_subplot(111, projection='3d')
+
+
+mapping = tdlist[:,2]
+high_threshval = 50
+low_threshval = 20
+mapping[mapping > high_threshval] = high_threshval
+mapping[mapping < low_threshval] = low_threshval
+zmax = np.max(mapping)
+zmin = np.min(mapping)
+ax.set_zlim(zmin,zmax)
+p = ax.scatter(tdlist[:,1], tdlist[:,0], mapping, c = mapping)
+
+fig.colorbar(p)
+
+#fix azimuth 270
+
+for ii in range(240,300,1):
+    ax.view_init(elev=250., azim=ii)
+    plt.savefig("azimuth%d.png" % ii)
+
+for ii in reversed(range(270,300,1)):
+    ax.view_init(elev=250., azim=ii)
+    plt.savefig("azimuthr%d.png" % ii)
+
+
+for jj in range(220,270,1): 
+    ax.view_init(elev=jj, azim=270.)
+    plt.savefig("elev%d.png" % jj)
+
+#plt.show()
 
 
 
